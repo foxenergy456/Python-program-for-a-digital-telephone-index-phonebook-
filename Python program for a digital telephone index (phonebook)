@@ -1,0 +1,208 @@
+import json
+import os
+
+class PhoneBook:
+    def __init__(self, filename="contacts.json"):
+        self.filename = filename
+        self.contacts = {}
+        self.load_contacts()
+
+    def load_contacts(self):
+        """Load contacts from the JSON file if it exists."""
+        if os.path.exists(self.filename):
+            try:
+                with open(self.filename, 'r') as file:
+                    self.contacts = json.load(file)
+            except json.JSONDecodeError:
+                print("Error loading contacts. Starting with an empty phonebook.")
+                self.contacts = {}
+        else:
+            print("No existing contacts file found. Starting with an empty phonebook.")
+
+    def save_contacts(self):
+        """Save contacts to the JSON file."""
+        try:
+            with open(self.filename, 'w') as file:
+                json.dump(self.contacts, file, indent=4)
+            print("Contacts saved successfully.")
+        except Exception as e:
+            print(f"Error saving contacts: {e}")
+
+    def add_contact(self, name, phone, email):
+        """Add a new contact to the phonebook."""
+        if name in self.contacts:
+            print("Contact already exists! Use update to modify.")
+            return
+        self.contacts[name] = {"phone": phone, "email": email}
+        self.save_contacts()
+        print(f"Contact '{name}' added successfully.")
+
+    def view_contacts(self):
+        """Display all contacts."""
+        if not self.contacts:
+            print("Phonebook is empty.")
+            return
+        print("\n--- Contacts ---")
+        for name, details in self.contacts.items():
+            print(f"Name: {name}, Phone: {details['phone']}, Email: {details['email']}")
+        print("---------------")
+
+    def search_contact(self, name):
+        """Search for a contact by name."""
+        if name in self.contacts:
+            details = self.contacts[name]
+            print(f"Found: Name: {name}, Phone: {details['phone']}, Email: {details['email']}")
+        else:
+            print(f"Contact '{name}' not found.")
+
+    def update_contact(self, name, phone=None, email=None):
+        """Update a contact's phone or email."""
+        if name not in self.contacts:
+            print(f"Contact '{name}' not found.")
+            return
+        if phone:
+            self.contacts[name]["phone"] = phone
+        if email:
+            self.contacts[name]["email"] = email
+        self.save_contacts()
+        print(f"Contact '{name}' updated successfully.")
+
+    def delete_contact(self, name):
+        """Delete a contact from the phonebook."""
+        if name in self.contacts:
+            del self.contacts[name]
+            self.save_contacts()
+            print(f"Contact '{name}' deleted successfully.")
+        else:
+            print(f"Contact '{name}' not found.")
+
+def main():
+    phonebook = PhoneBook()
+
+    while True:
+        print("\n=== Digital Telephone Index ===")
+        print("1. Add Contact")
+        print("2. View All Contacts")
+        print("3. Search Contact")
+        print("4. Update Contact")
+        print("5. Delete Contact")
+        print("6. Exit")
+        choice = input("Enter your choice (1-6): ")
+
+        if choice == "1":
+            name = input("Enter name: ")
+            phone = input("Enter phone number: ")
+            email = input("Enter email: ")
+            phonebook.add_contact(name, phone, email)
+
+        elif choice == "2":
+            phonebook.view_contacts()
+
+        elif choice == "3":
+            name = input("Enter name to search: ")
+            phonebook.search_contact(name)
+
+        elif choice == "4":
+            name = input("Enter name to update: ")
+            phone = input("Enter new phone number (leave blank to skip): ")
+            email = input("Enter new email (leave blank to skip): ")
+            phonebook.update_contact(name, phone if phone else None, email if email else None)
+
+        elif choice == "5":
+            name = input("Enter name to delete: ")
+            phonebook.delete_contact(name)
+
+        elif choice == "6":
+            print("Exiting phonebook. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
+
+{
+    "John Doe": {
+        "phone": "123-456-7890",
+        "email": "john@example.com"
+    },
+    "Jane Smith": {
+        "phone": "987-654-3210",
+        "email": "jane@example.com"
+    }
+}
+
+python phonebook.py
+
+import tkinter as tk
+from tkinter import messagebox
+import json
+import os
+
+class PhoneBookGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Digital Telephone Index")
+        self.phonebook = PhoneBook()
+        
+        # GUI Elements
+        tk.Label(root, text="Name:").grid(row=0, column=0, padx=5, pady=5)
+        self.name_entry = tk.Entry(root)
+        self.name_entry.grid(row=0, column=1, padx=5, pady=5)
+        
+        tk.Label(root, text="Phone:").grid(row=1, column=0, padx=5, pady=5)
+        self.phone_entry = tk.Entry(root)
+        self.phone_entry.grid(row=1, column=1, padx=5, pady=5)
+        
+        tk.Label(root, text="Email:").grid(row=2, column=0, padx=5, pady=5)
+        self.email_entry = tk.Entry(root)
+        self.email_entry.grid(row=2, column=1, padx=5, pady=5)
+        
+        tk.Button(root, text="Add Contact", command=self.add_contact).grid(row=3, column=0, columnspan=2, pady=5)
+        tk.Button(root, text="View Contacts", command=self.view_contacts).grid(row=4, column=0, columnspan=2, pady=5)
+        tk.Button(root, text="Search Contact", command=self.search_contact).grid(row=5, column=0, columnspan=2, pady=5)
+        
+        self.result_text = tk.Text(root, height=10, width=50)
+        self.result_text.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+
+    def add_contact(self):
+        name = self.name_entry.get()
+        phone = self.phone_entry.get()
+        email = self.email_entry.get()
+        if name and phone and email:
+            self.phonebook.add_contact(name, phone, email)
+            messagebox.showinfo("Success", f"Contact '{name}' added.")
+            self.clear_entries()
+        else:
+            messagebox.showerror("Error", "Please fill all fields.")
+
+    def view_contacts(self):
+        self.result_text.delete(1.0, tk.END)
+        if not self.phonebook.contacts:
+            self.result_text.insert(tk.END, "Phonebook is empty.\n")
+        else:
+            for name, details in self.phonebook.contacts.items():
+                self.result_text.insert(tk.END, f"Name: {name}, Phone: {details['phone']}, Email: {details['email']}\n")
+
+    def search_contact(self):
+        name = self.name_entry.get()
+        if name:
+            self.result_text.delete(1.0, tk.END)
+            if name in self.phonebook.contacts:
+                details = self.phonebook.contacts[name]
+                self.result_text.insert(tk.END, f"Found: Name: {name}, Phone: {details['phone']}, Email: {details['email']}\n")
+            else:
+                self.result_text.insert(tk.END, f"Contact '{name}' not found.\n")
+        else:
+            messagebox.showerror("Error", "Please enter a name to search.")
+
+    def clear_entries(self):
+        self.name_entry.delete(0, tk.END)
+        self.phone_entry.delete(0, tk.END)
+        self.email_entry.delete(0, tk.END)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = PhoneBookGUI(root)
+    root.mainloop()
