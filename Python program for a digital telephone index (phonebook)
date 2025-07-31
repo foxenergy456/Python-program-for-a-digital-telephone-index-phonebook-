@@ -197,12 +197,4 @@ class PhoneBookGUI:
         else:
             messagebox.showerror("Error", "Please enter a name to search.")
 
-    def clear_entries(self):
-        self.name_entry.delete(0, tk.END)
-        self.phone_entry.delete(0, tk.END)
-        self.email_entry.delete(0, tk.END)
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = PhoneBookGUI(root)
-    root.mainloop()
+   
